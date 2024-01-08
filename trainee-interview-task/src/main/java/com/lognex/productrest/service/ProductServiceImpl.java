@@ -1,16 +1,12 @@
 package com.lognex.productrest.service;
 
 import com.lognex.productrest.entity.Product;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
 public class ProductServiceImpl implements ProductService {
-
-    private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     private static final Map<UUID, Product> PRODUCT_STORAGE = new HashMap<>();
 
