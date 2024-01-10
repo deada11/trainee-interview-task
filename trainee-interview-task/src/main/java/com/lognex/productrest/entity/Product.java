@@ -11,6 +11,14 @@ public class Product {
     private BigDecimal price;
     private boolean availability;
 
+    public Product(UUID id, String name, String description, BigDecimal price, boolean availability) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.availability = availability;
+    }
+
     public UUID getId() {
         return id;
     }

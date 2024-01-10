@@ -12,7 +12,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void createProduct(Product product) {
-        final UUID id = UUID.randomUUID();
+        final UUID id = product.getId();
         product.setId(id);
         PRODUCT_STORAGE.put(id, product);
     }
