@@ -5,7 +5,7 @@ import com.lognex.productrest.entity.Product;
 public class ProductValidator {
 
     public boolean productValidator(Product product) {
-        if ((product.getName().length() <= 255 && product.getName() != null) &&
+        if ((product.getName().length() <= 255 && product.getName() != null && !product.getName().isEmpty()) &&
                 (product.getDescription().length() <= 4096))
         {
             return true;

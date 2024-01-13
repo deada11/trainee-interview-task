@@ -1,15 +1,21 @@
 package com.lognex.productrest.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 import java.math.BigDecimal;
 import java.util.UUID;
-
+@Entity
 public class Product {
 
+    @Id
     private UUID id;
     private String name;
     private String description;
     private BigDecimal price;
     private boolean availability;
+
+    public Product() {}
 
     public Product(UUID id, String name, String description, BigDecimal price, boolean availability) {
         this.id = id;
