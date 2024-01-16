@@ -2,7 +2,9 @@ package com.lognex.productrest.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.UUID;
 @Entity
@@ -10,8 +12,12 @@ public class Product {
 
     @Id
     private UUID id;
+    @Size(min = 1, max = 255)
+    @NotNull
     private String name;
+    @Size(max = 4096)
     private String description;
+    @Positive
     private BigDecimal price;
     private boolean availability;
 
