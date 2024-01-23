@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({CustomEntityNotFoundException.class, EntityNotFoundException.class})
     protected ResponseEntity<Object> handleEntityNotFoundEx(CustomEntityNotFoundException ex, WebRequest request) {
-        ApiError apiError = new ApiError("Entity not found exception", ex.getMessage());
+        ApiError apiError = new ApiError("Product not found", ex.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
