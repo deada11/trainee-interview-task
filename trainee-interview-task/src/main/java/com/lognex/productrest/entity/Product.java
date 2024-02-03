@@ -1,26 +1,32 @@
 package com.lognex.productrest.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.Objects;
 import java.util.UUID;
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Table(name = "products")
 public class Product {
 
     @Id
+    @Column(name = "id")
     private UUID id;
     @Size(min = 1, max = 255, message = "Product name must be from 1 to 255 characters")
     @NotNull(message = "Name cannot be null")
+    @Column(name = "name")
     private String name;
     @Size(max = 4096, message = "Product description cannot be more than 4096 characters")
+    @Column(name = "description")
     private String description;
+    @Column(name = "price")
     private BigDecimal price;
+    @Column(name = "availability")
     private boolean availability;
 
     public Product() {}
@@ -30,11 +36,7 @@ public class Product {
         this.name = name;
         this.description = description;
         // Кажется, это стоит убрать. Логику переопределения суммы перенести в контроллер и разобраться, почему не работает.
-        if (price == null) {
-            this.price = BigDecimal.ZERO;
-        } else {
-            this.price = price;
-        }
+        this.price = Objects.requireNonNullElse(price, BigDecimal.ZERO);
         this.availability = availability;
     }
 

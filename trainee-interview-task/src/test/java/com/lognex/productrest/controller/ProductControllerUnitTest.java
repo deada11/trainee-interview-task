@@ -4,13 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lognex.productrest.dao.ProductRepository;
 import com.lognex.productrest.entity.Product;
 import com.lognex.productrest.exception.CustomEntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Description;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -34,7 +37,6 @@ public class ProductControllerUnitTest {
     private final static BigDecimal TEST_NEW_CORRECT_PRICE = BigDecimal.valueOf(6543.21);
     private final static boolean TEST_AVAILABILITY_TRUE = true;
     private final static boolean TEST_AVAILABILITY_FALSE = false;
-
     private final static String TEST_MORE_THAN_255_SYMBOLS_NAME = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in nulla risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec tempus pellentesque elit, nec sodales enim condimentum eget. Nullam eget diam quis diam congue pretium";
     private final static String TEST_MORE_THAN_4096_SYMBOLS_DESCRIPTION = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in nulla risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec tempus pellentesque elit, nec sodales enim condimentum eget. Nullam eget diam quis diam congue pretium. Nullam finibus mauris non sodales semper. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam tempor eu leo a suscipit. Cras molestie sed diam a convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam ut mauris et ex faucibus tincidunt ut id lacus. Suspendisse quis nisi vitae lorem sagittis convallis non ut ligula. Suspendisse non lacus nisl. Maecenas faucibus scelerisque purus, nec volutpat orci varius vel. Ut ut ullamcorper orci. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in nulla risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec tempus pellentesque elit, nec sodales enim condimentum eget. Nullam eget diam quis diam congue pretium. Nullam finibus mauris non sodales semper. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam tempor eu leo a suscipit. Cras molestie sed diam a convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam ut mauris et ex faucibus tincidunt ut id lacus. Suspendisse quis nisi vitae lorem sagittis convallis non ut ligula. Suspendisse non lacus nisl. Maecenas faucibus scelerisque purus, nec volutpat orci varius vel. Ut ut ullamcorper orci. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in nulla risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec tempus pellentesque elit, nec sodales enim condimentum eget. Nullam eget diam quis diam congue pretium. Nullam finibus mauris non sodales semper. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam tempor eu leo a suscipit. Cras molestie sed diam a convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam ut mauris et ex faucibus tincidunt ut id lacus. Suspendisse quis nisi vitae lorem sagittis convallis non ut ligula. Suspendisse non lacus nisl. Maecenas faucibus scelerisque purus, nec volutpat orci varius vel. Ut ut ullamcorper orci. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in nulla risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec tempus pellentesque elit, nec sodales enim condimentum eget. Nullam eget diam quis diam congue pretium. Nullam finibus mauris non sodales semper. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam tempor eu leo a suscipit. Cras molestie sed diam a convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam ut mauris et ex faucibus tincidunt ut id lacus. Suspendisse quis nisi vitae lorem sagittis convallis non ut ligula. Suspendisse non lacus nisl. Maecenas faucibus scelerisque purus, nec volutpat orci varius vel. Ut ut ullamcorper orci. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in nulla risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec tempus pellentesque elit, nec sodales enim condimentum eget. Nullam eget diam quis diam congue pretium. Nullam finibus mauris non sodales semper. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam tempor eu leo a suscipit. Cras molestie sed diam a convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam ut mauris et ex faucibus tincidunt ut id lacus. Suspendisse quis nisi vitae lorem sagittis convallis non ut ligula. Suspendisse non lacus nisl. Maecenas faucibus scelerisque purus, nec volutpat orci varius vel. Ut ut ullamcorper orci. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas in nulla risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec tempus pellentesque elit, nec sodales enim condimentum eget. Nullam eget diam quis diam congue pretium. Nullam finibus mauris non sodales semper. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam tempor eu leo a suscipit. Cras molestie sed diam a convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam ut mauris et ex faucibus tincidunt ut id lacus. Suspendisse quis nisi vitae lorem sagittis convallis non ut ligula. Suspendisse non lacus nisl. Maecenas faucibus scelerisque purus, nec volutpat orci varius vel. Ut ut ullamcorper orci.";
     private final static BigDecimal TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES = BigDecimal.valueOf(444.4444444);
@@ -50,6 +52,8 @@ public class ProductControllerUnitTest {
 
 
     @Test
+    @Description("Проверяет, что при передаче корректных данных для создания продукта" +
+            "возвращается созданный корректный продукт")
     public void test_givenProduct_whenAdd_thenStatus200andProductReturned() throws Exception {
 
         Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
@@ -65,6 +69,7 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при передаче пустого продукта возвращается ошибка")
     public void test_givenEmptyProduct_whenAdd_thenThrowsException() throws Exception {
         Product product = new Product();
         Mockito.when(repository.save(Mockito.any())).thenReturn(product);
@@ -80,6 +85,7 @@ public class ProductControllerUnitTest {
 //    public void test_givenIncorrectProductId_whenAdd_thenThrowsException() throws Exception {}
 
     @Test
+    @Description("Проверяет, что при передаче слишком большого имени при создании продукта возвращается ошибка")
     public void test_givenBigProductName_whenAdd_thenThrowsException() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID, TEST_MORE_THAN_255_SYMBOLS_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE);
         Mockito.when(repository.save(Mockito.any())).thenReturn(product);
@@ -93,6 +99,7 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при передаче пустого имени при создании продукта возвращается ошибка")
     public void test_givenEmptyName_whenAdd_thenThrowsException() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID,
                 "",
@@ -110,6 +117,7 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при передаче имени равного NULL при создании продукта возвращается ошибка")
     public void test_givenNullName_whenAdd_thenThrowsException() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID,
                 null,
@@ -127,6 +135,7 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при передаче слишком длинного описания при создании продукта возвращается ошибка")
     public void test_givenIncorrectDescription_whenAdd_thenThrowsException() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_MORE_THAN_4096_SYMBOLS_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
         Mockito.when(repository.save(Mockito.any())).thenReturn(product);
@@ -140,6 +149,8 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при передаче цены с более чем 2-мя знаками после запятой при создании продукта " +
+            "происходит округление и возвращается продукт с ценой с 2-мя знаками после запятой")
     public void test_givenIncorrectPriceType_whenAdd_thenStatus200AndPriceCorrect() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID,
                 TEST_CORRECT_NAME,
@@ -157,6 +168,8 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при передаче цены равной NULL при создании продукта " +
+            "происходит округление и возвращается продукт с ценой с 2-мя знаками после запятой")
     public void test_givenNullPrice_whenAdd_thenStatus200AndPrice0() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID,
                 TEST_CORRECT_NAME,
@@ -174,6 +187,7 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при попытке получить корректного и существующего продукта он возвращается")
     public void test_givenId_whenGetExistingProduct_thenStatus200andProductReturned() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
 
@@ -189,6 +203,7 @@ public class ProductControllerUnitTest {
                 .andExpect(jsonPath("$.availability").value(TEST_AVAILABILITY_FALSE));
     }
     @Test
+    @Description("Проверяет, что при попытке получения несуществующего продукта он возвращается")
     public void test_givenId_whenGetNotExistingProduct_thenStatus404anExceptionThrown() throws Exception {
         Mockito.when(repository.findById(Mockito.any())).thenReturn(Optional.empty());
         mockMvc.perform(
@@ -198,6 +213,7 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при попытке обновления существующего продукта он обновляется и возвращается в ответе")
     public void test_giveProduct_whenUpdate_thenStatus200andUpdatedReturns() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
         Mockito.when(repository.save(Mockito.any())).thenReturn(product);
@@ -219,6 +235,7 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при попытке удалить существующий продукт он удаляется и возвращается ответ 200")
     public void test_givenProduct_whenDeleteProduct_thenStatus200() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
         Mockito.when(repository.findById(Mockito.any())).thenReturn(Optional.of(product));
@@ -229,6 +246,7 @@ public class ProductControllerUnitTest {
     }
 
     @Test
+    @Description("Проверяет, что при попытке получить список существующих продуктов этот список возвращается в ответе")
     public void test_givenProducts_whenGetProducts_thenStatus200() throws Exception {
         Product firstProduct = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE);
         Product secondProduct = new Product(TEST_NEW_PRODUCT_ID, TEST_NEW_CORRECT_NAME, TEST_NEW_CORRECT_DESCRIPTION, TEST_NEW_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
