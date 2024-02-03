@@ -36,7 +36,8 @@ public class Product {
         this.name = name;
         this.description = description;
         // Кажется, это стоит убрать. Логику переопределения суммы перенести в контроллер и разобраться, почему не работает.
-        this.price = Objects.requireNonNullElse(price, BigDecimal.ZERO);
+//        this.price = Objects.requireNonNullElse(price, BigDecimal.ZERO);
+        this.price = price;
         this.availability = availability;
     }
 
