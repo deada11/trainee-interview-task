@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lognex.productrest.dao.ProductRepository;
 import com.lognex.productrest.entity.Product;
 import com.lognex.productrest.exception.CustomEntityNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
+import org.hibernate.validator.internal.constraintvalidators.bv.number.InfinityNumberComparatorHelper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +13,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Description;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -81,8 +81,6 @@ public class ProductControllerUnitTest {
                 .andExpect(jsonPath("message").value("Method arguments not valid"));
     }
 
-//    @Test
-//    public void test_givenIncorrectProductId_whenAdd_thenThrowsException() throws Exception {}
 
     @Test
     @Description("Проверяет, что при передаче слишком большого имени при создании продукта возвращается ошибка")
@@ -163,14 +161,12 @@ public class ProductControllerUnitTest {
                 .content(objectMapper.writeValueAsString(product))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(product)))
                 .andExpect(jsonPath("$.price").value(444.44));
     }
 
     @Test
-    @Description("Проверяет, что при передаче цены равной NULL при создании продукта " +
-            "происходит округление и возвращается продукт с ценой с 2-мя знаками после запятой")
-    public void test_givenNullPrice_whenAdd_thenStatus200AndPrice0() throws Exception {
+    @Description("Проверяет, что при передаче цены равной NULL при создании продукта создается продукт с ценой 0")
+    public void test_givenNullPrice_whenAdd_thenStatus200AndPriceBecomesZero() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID,
                 TEST_CORRECT_NAME,
                 TEST_CORRECT_DESCRIPTION,
@@ -182,7 +178,6 @@ public class ProductControllerUnitTest {
                 .content(objectMapper.writeValueAsString(product))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(product)))
                 .andExpect(jsonPath("$.price").value(0));
     }
 
@@ -203,7 +198,7 @@ public class ProductControllerUnitTest {
                 .andExpect(jsonPath("$.availability").value(TEST_AVAILABILITY_FALSE));
     }
     @Test
-    @Description("Проверяет, что при попытке получения несуществующего продукта он возвращается")
+    @Description("Проверяет, что при попытке получения несуществующего продукта будет выброшена ошибка 404")
     public void test_givenId_whenGetNotExistingProduct_thenStatus404anExceptionThrown() throws Exception {
         Mockito.when(repository.findById(Mockito.any())).thenReturn(Optional.empty());
         mockMvc.perform(
@@ -214,7 +209,7 @@ public class ProductControllerUnitTest {
 
     @Test
     @Description("Проверяет, что при попытке обновления существующего продукта он обновляется и возвращается в ответе")
-    public void test_giveProduct_whenUpdate_thenStatus200andUpdatedReturns() throws Exception {
+    public void test_givenProduct_whenUpdate_thenStatus200andUpdatedReturns() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
         Mockito.when(repository.save(Mockito.any())).thenReturn(product);
         Mockito.when(repository.findById(Mockito.any())).thenReturn(Optional.of(product));
@@ -231,6 +226,52 @@ public class ProductControllerUnitTest {
                 .andExpect(jsonPath("$.name").value(TEST_NEW_CORRECT_NAME))
                 .andExpect(jsonPath("$.description").value(TEST_NEW_CORRECT_DESCRIPTION))
                 .andExpect(jsonPath("$.price").value(TEST_NEW_CORRECT_PRICE))
+                .andExpect(jsonPath("$.availability").value(TEST_AVAILABILITY_TRUE));
+    }
+
+    @Test
+    @Description("Проверяем, что при попытке изменить цену существующего продукта на NULL, цена изменится на 0 и " +
+            "вернется корректное тело продукта")
+    public void test_givenProductWithNullPrice_whenUpdate_thenPriceBecomesZeroStatus200AndUpdatedReturns() throws Exception {
+        Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
+        Mockito.when(repository.save(Mockito.any())).thenReturn(product);
+        Mockito.when(repository.findById(Mockito.any())).thenReturn(Optional.of(product));
+        mockMvc.perform(
+                        put("/api/products/product/{id}", TEST_PRODUCT_ID)
+                                .content(objectMapper.writeValueAsString(new Product(TEST_PRODUCT_ID,
+                                        TEST_NEW_CORRECT_NAME,
+                                        TEST_NEW_CORRECT_DESCRIPTION,
+                                        TEST_NULL_PRICE,
+                                        TEST_AVAILABILITY_TRUE)))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(product.getId().toString()))
+                .andExpect(jsonPath("$.name").value(TEST_NEW_CORRECT_NAME))
+                .andExpect(jsonPath("$.description").value(TEST_NEW_CORRECT_DESCRIPTION))
+                .andExpect(jsonPath("$.price").value(0.00))
+                .andExpect(jsonPath("$.availability").value(TEST_AVAILABILITY_TRUE));
+    }
+
+    @Test
+    @Description("Проверяем, что при попытке передать для изменения цену с более чем 2 знаками после запятой" +
+            ", цена будет округлена, знаков останется 2 и вернется измененное тело продукта")
+    public void test_givenPriceWithMoreThanTwoDecimals_whenUpdate_thenPriceHasTwoDecimalsAndUpdateProduct_OK() throws Exception {
+        Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
+        Mockito.when(repository.save(Mockito.any())).thenReturn(product);
+        Mockito.when(repository.findById(Mockito.any())).thenReturn(Optional.of(product));
+        mockMvc.perform(
+                        put("/api/products/product/{id}", TEST_PRODUCT_ID)
+                                .content(objectMapper.writeValueAsString(new Product(TEST_PRODUCT_ID,
+                                        TEST_NEW_CORRECT_NAME,
+                                        TEST_NEW_CORRECT_DESCRIPTION,
+                                        TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES,
+                                        TEST_AVAILABILITY_TRUE)))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(product.getId().toString()))
+                .andExpect(jsonPath("$.name").value(TEST_NEW_CORRECT_NAME))
+                .andExpect(jsonPath("$.description").value(TEST_NEW_CORRECT_DESCRIPTION))
+                .andExpect(jsonPath("$.price").value(TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES.setScale(2,RoundingMode.HALF_UP)))
                 .andExpect(jsonPath("$.availability").value(TEST_AVAILABILITY_TRUE));
     }
 

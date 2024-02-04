@@ -63,12 +63,16 @@ public class ProductController {
         Optional<Product> p = productRepository.findById(id);
         if (!p.isPresent())
             throw new CustomEntityNotFoundException(id);
-        Product oldProduct = p.get();
-        oldProduct.setName(product.getName());
-        oldProduct.setDescription(product.getDescription());
-        oldProduct.setPrice(product.getPrice());
-        oldProduct.setAvailability(product.isAvailability());
-        return ResponseEntity.ok().body(productRepository.save(oldProduct));
+        Product newProduct = p.get();
+        newProduct.setName(product.getName());
+        newProduct.setDescription(product.getDescription());
+        if (product.getPrice() == null) {
+            newProduct.setPrice(BigDecimal.ZERO);
+        } else {
+            newProduct.setPrice(product.getPrice().setScale(2, RoundingMode.HALF_UP));
+        }
+        newProduct.setAvailability(product.isAvailability());
+        return ResponseEntity.ok().body(productRepository.save(newProduct));
 
     }
 

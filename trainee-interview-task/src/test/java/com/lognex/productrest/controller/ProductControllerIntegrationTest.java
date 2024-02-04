@@ -15,28 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-/*
-2. Получение продукта по айдишнику:
-    передать существующий айдишник - ответ и тело корректные (+)
-    передать несуществующий айдишник - ответ, тело и ошибка корректные
-    передать корявый айдишник - ответ, тело и ошибка корректные
-3. Получение списка продуктов - ответ и тело ответа корретные
-4. Изменение продукта по айдишнику:
-    передать существующий айдишник, поменять различные поля (имя, цену, наличие, описание и их комбинации) - ответ и тело корректные
-    передать несуществующий айдишник, попробовать что-нибудь поменять - ответ, тело и ошибка корректные
-    передать корявый айдишник, попробовать что-нибудь поменять - ответ, тело и ошибка корректные
-5. Удаление продукта по айдишнику
-    передать существующий айдишник - ответ и тело корректные (+)
-    передать несуществующий айдишник - ответ, тело и ошибка корректные
-    передать корявый айдишник - ответ, тело и ошибка корректные
-
- */
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -72,7 +56,7 @@ class ProductControllerIntegrationTest {
     @Test
     @Description("Проверяет, что при передаче корректных данных для создания продукта" +
             "возвращается созданный корректный продукт")
-    public void test_whenGivenCorrectValues_thenCreateValidProduct_OK() throws Exception {
+    public void test_givenProduct_whenAdd_thenStatus200andProductReturned() throws Exception {
 
         Product product = new Product(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE);
 
@@ -91,7 +75,7 @@ class ProductControllerIntegrationTest {
     @Test
     @Description("Проверяет, что при передаче цены с более чем 2-мя знаками после запятой при создании продукта " +
             "происходит округление и возвращается продукт с ценой с 2-мя знаками после запятой")
-    public void test_givenIncorrectPriceType_whenAdd_thenThrowsException() throws Exception {
+    public void test_givenIncorrectPriceType_whenAdd_thenStatus200AndPriceCorrect() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID,
                 TEST_CORRECT_NAME,
                 TEST_CORRECT_DESCRIPTION,
@@ -102,12 +86,12 @@ class ProductControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(product))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(product)));
+                .andExpect(jsonPath("$.price").value(666.67));
     }
 
     @Test
     @Description("Проверяет, что при передаче цены равной NULL при создании продукта создается продукт с ценой 0")
-    public void test_givenNullPrice_whenAdd_thenCreateCorrectProduct() throws Exception {
+    public void test_givenNullPrice_whenAdd_thenStatus200AndPriceBecomesZero() throws Exception {
         Product product = new Product(TEST_PRODUCT_ID,
                 TEST_CORRECT_NAME,
                 TEST_CORRECT_DESCRIPTION,
@@ -118,14 +102,13 @@ class ProductControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(product))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(product)))
                 .andExpect(jsonPath("$.price").value(0));
     }
 
     @Test
     @Description("Проверяем, что при попытке получить по корректному id существующий продукт, в ответе придет " +
             "корректное тело этого продукта")
-    public void test_whenHasCorrectProduct_thenGetThisCorrectProduct_OK() throws Exception {
+    public void test_givenId_whenGetExistingProduct_thenStatus200andProductReturned() throws Exception {
         UUID id = createTestProduct(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE).getId();
 
         mockMvc.perform(
@@ -140,17 +123,16 @@ class ProductControllerIntegrationTest {
 
     @Test
     @Description("Проверяем, что если продукта не существует, будет выброшена ошибка 404")
-    public void test_whenGetNotExistingProduct_thenNotFoundException_404() throws Exception {
+    public void test_givenId_whenGetNotExistingProduct_thenStatus404anExceptionThrown() throws Exception {
 
         mockMvc.perform(
                 get("/api/products/product/{invalid_id}", TEST_NON_EXISTENT_PRODUCT_ID))
                 .andExpect(status().isNotFound())
                 .andExpect(mvcResult -> mvcResult.getResolvedException().getClass().equals(CustomEntityNotFoundException.class));
     }
-
     @Test
     @Description("Проверяем, что при попытке изменить существующий продукт, возвращается измененное тело измененного продукта")
-    public void test_whenGivenCorrectProduct_andUpdate_thenUpdateProduct_OK() throws Exception {
+    public void test_giveProduct_whenUpdate_thenStatus200andUpdatedReturns() throws Exception {
         UUID id = createTestProduct(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE).getId();
 
         mockMvc.perform(
@@ -167,9 +149,47 @@ class ProductControllerIntegrationTest {
     }
 
     @Test
+    @Description("Проверяем, что при попытке передать для изменения цену с более чем 2 знаками после запятой" +
+            ", цена будет округлена, знаков останется 2 и вернется измененное тело продукта")
+    public void test_whenGivenPriceWithMoreThanTwoDecimals_andUpdate_thenPriceHasTwoDecimalsAndUpdateProduct_OK() throws Exception {
+        UUID id = createTestProduct(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE).getId();
+
+        mockMvc.perform(
+                        put("/api/products/product/{id}", id)
+                                .content(objectMapper.writeValueAsString(new Product(TEST_PRODUCT_ID, TEST_NEW_CORRECT_NAME,
+                                        TEST_NEW_CORRECT_DESCRIPTION, TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES, TEST_AVAILABILITY_FALSE)))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(String.valueOf(repository.findById(id).get().getId())))
+                .andExpect(jsonPath("$.name").value(TEST_NEW_CORRECT_NAME))
+                .andExpect(jsonPath("$.description").value(TEST_NEW_CORRECT_DESCRIPTION))
+                .andExpect(jsonPath("$.price").value(TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES.setScale(2, RoundingMode.HALF_UP)))
+                .andExpect(jsonPath("$.availability").value(repository.findById(id).get().isAvailability()));
+    }
+
+    @Test
+    @Description("Проверяем, что при попытке изменить цену существующего продукта на NULL, цена изменится на 0 и " +
+            "вернется корректное тело продукта")
+    public void test_giveProductWithNullPrice_whenUpdate_thenPriceBecomesZeroStatus200AndUpdatedReturns() throws Exception {
+        UUID id = createTestProduct(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE).getId();
+
+        mockMvc.perform(
+                        put("/api/products/product/{id}", id)
+                                .content(objectMapper.writeValueAsString(new Product(TEST_PRODUCT_ID, TEST_NEW_CORRECT_NAME,
+                                        TEST_NEW_CORRECT_DESCRIPTION, TEST_NULL_PRICE, TEST_AVAILABILITY_FALSE)))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(String.valueOf(repository.findById(id).get().getId())))
+                .andExpect(jsonPath("$.name").value(TEST_NEW_CORRECT_NAME))
+                .andExpect(jsonPath("$.description").value(TEST_NEW_CORRECT_DESCRIPTION))
+                .andExpect(jsonPath("$.price").value(0.00))
+                .andExpect(jsonPath("$.availability").value(repository.findById(id).get().isAvailability()));
+    }
+
+    @Test
     @Description("Проверям, что при удалении существующего продукта возвращается ответ 200, а при запросе уже удаленного" +
             "продукта возвращается 404 ошибка")
-    public void test_deleteProduct_thenReturnOk_andGetDeetedProduct_thenThrowException_OK() throws Exception {
+    public void test_givenProduct_whenDeleteProduct_thenStatus200() throws Exception {
         UUID id = createTestProduct(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE).getId();
 
         mockMvc.perform(
@@ -181,7 +201,7 @@ class ProductControllerIntegrationTest {
 
     @Test
     @Description("Проверяем, что при запросе всего списка продуктов этот список возвращается")
-    public void test_givenListOfProducts_thenReturnAllProducts_OK() throws Exception {
+    public void test_givenProducts_whenGetProducts_thenStatus200() throws Exception {
         Product firstProduct = createTestProduct(TEST_PRODUCT_ID, TEST_CORRECT_NAME, TEST_CORRECT_DESCRIPTION, TEST_CORRECT_PRICE, TEST_AVAILABILITY_TRUE);
         Product secondProduct = createTestProduct(TEST_NEW_PRODUCT_ID, TEST_NEW_CORRECT_NAME, TEST_NEW_CORRECT_DESCRIPTION, TEST_NEW_CORRECT_PRICE, TEST_AVAILABILITY_FALSE);
 
