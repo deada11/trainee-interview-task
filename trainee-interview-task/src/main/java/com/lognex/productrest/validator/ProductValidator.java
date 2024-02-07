@@ -7,17 +7,6 @@ import java.math.RoundingMode;
 
 public class ProductValidator {
 
-    // NPE here
-    public boolean productValidator(Product product) {
-        if ((product.getName().length() <= 255 && product.getName() != null && !product.getName().isEmpty()) &&
-                (product.getDescription().length() <= 4096))
-        {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public Product priceChanger(Product product) {
         BigDecimal normalizedPrice = normalizePrice(product.getPrice());
         product.setPrice(normalizedPrice);

@@ -1,6 +1,5 @@
 package com.lognex.productrest.controller;
 
-import com.lognex.productrest.dao.ProductRepository;
 import com.lognex.productrest.entity.Product;
 import com.lognex.productrest.exception.CustomEntityNotFoundException;
 import com.lognex.productrest.service.ProductRestService;
@@ -10,10 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 
@@ -21,9 +17,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
-
-    @Autowired
-    private ProductRepository productRepository;
 
     @Autowired
     private final ProductRestService productRestService;
@@ -45,21 +38,21 @@ public class ProductController {
 
     @PostMapping("/product")
     public ResponseEntity<Product> creationProduct(@RequestBody @Valid Product product) {
-        return ResponseEntity.ok().body(productRestService.createProduct(product));
+        productRestService.createProduct(product);
+        return ResponseEntity.ok().body(product);
     }
 
     @PutMapping("/product/{productId}")
     public ResponseEntity<Product> updatingProduct(@RequestBody @Valid Product product,
                                                @PathVariable("productId") UUID id) throws CustomEntityNotFoundException {
-        return ResponseEntity.ok().body(productRestService.updateProduct(product, id));
+        productRestService.updateProduct(product, id);
+        return ResponseEntity.ok().body(product);
 
     }
 
-
     @DeleteMapping("/product/{productId}")
     public ResponseEntity<?> deleteProductById(@PathVariable("productId") UUID productId) throws CustomEntityNotFoundException {
-        Product deletingProduct = productRepository.findById(productId).orElseThrow(() -> new CustomEntityNotFoundException(productId));
-        productRepository.deleteById(productId);
+        productRestService.deleteProduct(productId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
