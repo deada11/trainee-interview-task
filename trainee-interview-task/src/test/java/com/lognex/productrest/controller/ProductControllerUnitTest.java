@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lognex.productrest.dao.ProductRepository;
 import com.lognex.productrest.entity.Product;
 import com.lognex.productrest.exception.CustomEntityNotFoundException;
-import org.hibernate.validator.internal.constraintvalidators.bv.number.InfinityNumberComparatorHelper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +48,7 @@ public class ProductControllerUnitTest {
 
     @MockBean
     private ProductRepository repository;
+
 
 
     @Test
@@ -147,38 +147,53 @@ public class ProductControllerUnitTest {
     }
 
     @Test
-    @Description("Проверяет, что при передаче цены с более чем 2-мя знаками после запятой при создании продукта " +
-            "происходит округление и возвращается продукт с ценой с 2-мя знаками после запятой")
-    public void test_givenIncorrectPriceType_whenAdd_thenStatus200AndPriceCorrect() throws Exception {
-        Product product = new Product(TEST_PRODUCT_ID,
-                TEST_CORRECT_NAME,
-                TEST_CORRECT_DESCRIPTION,
-                TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES,
-                TEST_AVAILABILITY_FALSE);
-        Mockito.when(repository.save(Mockito.any())).thenReturn(product);
-
-        mockMvc.perform(post("/api/products/product")
-                .content(objectMapper.writeValueAsString(product))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.price").value(444.44));
-    }
-
-    @Test
     @Description("Проверяет, что при передаче цены равной NULL при создании продукта создается продукт с ценой 0")
     public void test_givenNullPrice_whenAdd_thenStatus200AndPriceBecomesZero() throws Exception {
-        Product product = new Product(TEST_PRODUCT_ID,
+        Product productNullPrice = new Product(TEST_PRODUCT_ID,
                 TEST_CORRECT_NAME,
                 TEST_CORRECT_DESCRIPTION,
                 TEST_NULL_PRICE,
                 TEST_AVAILABILITY_FALSE);
-        Mockito.when(repository.save(Mockito.any())).thenReturn(product);
+
+        Product productCorrectPrice = new Product(TEST_PRODUCT_ID,
+                TEST_CORRECT_NAME,
+                TEST_CORRECT_DESCRIPTION,
+                BigDecimal.ZERO,
+                TEST_AVAILABILITY_FALSE);
+
+        Mockito.when(repository.save(Mockito.any())).thenReturn(productCorrectPrice);
 
         mockMvc.perform(post("/api/products/product")
-                .content(objectMapper.writeValueAsString(product))
+                .content(objectMapper.writeValueAsString(productNullPrice))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.price").value(0));
+                .andExpect(jsonPath("$.price").value(BigDecimal.ZERO));
+    }
+
+    @Test
+    @Description("Проверяет, что при передаче цены с более чем 2-мя знаками после запятой при создании продукта " +
+            "происходит округление и возвращается продукт с ценой с 2-мя знаками после запятой")
+    public void test_givenIncorrectPriceType_whenAdd_thenStatus200AndPriceCorrect() throws Exception {
+        Product productIncorrectPrice = new Product(TEST_PRODUCT_ID,
+                TEST_CORRECT_NAME,
+                TEST_CORRECT_DESCRIPTION,
+                TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES,
+                TEST_AVAILABILITY_FALSE);
+
+        Product productCorrectPrice = new Product(TEST_PRODUCT_ID,
+                TEST_CORRECT_NAME,
+                TEST_CORRECT_DESCRIPTION,
+                TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES.setScale(2, RoundingMode.HALF_UP),
+                TEST_AVAILABILITY_FALSE);
+
+        Mockito.when(repository.save(Mockito.any())).thenReturn(productCorrectPrice);
+
+        mockMvc.perform(post("/api/products/product")
+                        .content(objectMapper.writeValueAsString(productIncorrectPrice))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.price").value(TEST_INCORRECT_PRICE_WITH_MORE_THAN_2_DECIMAL_PLACES.setScale(
+                        2, RoundingMode.HALF_UP)));
     }
 
     @Test

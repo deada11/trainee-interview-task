@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 
 
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.UUID;
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -24,7 +23,7 @@ public class Product {
     @Size(max = 4096, message = "Product description cannot be more than 4096 characters")
     @Column(name = "description")
     private String description;
-    @Column(name = "price")
+    @Column(name = "price", precision = 12, scale = 2)
     private BigDecimal price;
     @Column(name = "availability")
     private boolean availability;
@@ -35,8 +34,6 @@ public class Product {
         this.id = id;
         this.name = name;
         this.description = description;
-        // Кажется, это стоит убрать. Логику переопределения суммы перенести в контроллер и разобраться, почему не работает.
-//        this.price = Objects.requireNonNullElse(price, BigDecimal.ZERO);
         this.price = price;
         this.availability = availability;
     }
