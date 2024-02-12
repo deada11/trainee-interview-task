@@ -22,19 +22,13 @@ import java.util.stream.Collectors;
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({CustomEntityNotFoundException.class, EntityNotFoundException.class})
     protected ResponseEntity<Object> handleEntityNotFoundEx(CustomEntityNotFoundException ex, WebRequest request) {
-        ApiError apiError = new ApiError("Product not found", ex.getMessage());
+        ApiError apiError = new ApiError("Product not found");
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(Exception.class)
-    protected ResponseEntity<Object> handleAllExceptions(Exception ex, WebRequest request) {
-        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST.toString(), ex.getMessage());
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        ApiError apiError = new ApiError("Incorrect JSON request", ex.getMessage());
+        ApiError apiError = new ApiError("Incorrect JSON request");
         return new ResponseEntity<>(apiError, status);
     }
 
@@ -45,7 +39,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 .stream()
                 .map(x -> x.getDefaultMessage())
                 .collect(Collectors.toList());
-        ApiError apiError = new ApiError("Method arguments not valid", ex.getMessage(), errors);
+        ApiError apiError = new ApiError("Method arguments not valid",  errors);
         return new ResponseEntity<>(apiError, status);
     }
 
@@ -54,7 +48,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         ApiError apiError = new ApiError();
         apiError.setMessage(String.format("The parameter '%s' of value '%s' could not be converted to type '%s'",
                 ex.getPropertyName(), ex.getValue(), Objects.requireNonNull(ex.getRequiredType()).getSimpleName()));
-        apiError.setDebugMessage(ex.getMessage());
         return new ResponseEntity<>(apiError, status);
     }
 
@@ -62,7 +55,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ApiError apiError = new ApiError();
         apiError.setMessage("No handler found :(");
-        apiError.setDebugMessage(ex.getMessage());
         return new ResponseEntity<>(apiError, status);
     }
 }

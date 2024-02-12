@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lognex.productrest.dao.ProductRepository;
 import com.lognex.productrest.entity.Product;
 import com.lognex.productrest.exception.CustomEntityNotFoundException;
-import com.lognex.productrest.service.ProductRestService;
+import com.lognex.productrest.service.ProductRestServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +44,7 @@ class ProductControllerIntegrationTest {
     private ProductRepository repository;
 
     @Autowired
-    private ProductRestService productRestService;
+    private ProductRestServiceImpl productRestServiceImpl;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -52,6 +52,7 @@ class ProductControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    // Возможно это стоит удалить, иначе каждый прогон тестов удалит данные из БД
     @AfterEach
     public void resetDb() {
         repository.deleteAll();
@@ -74,11 +75,11 @@ class ProductControllerIntegrationTest {
                 .andExpect(jsonPath("$.description").value(product.getDescription()))
                 .andExpect(jsonPath("$.price").value(product.getPrice()))
                 .andExpect(jsonPath("$.availability").value(product.isAvailability()));
-        assertEquals(TEST_PRODUCT_ID, productRestService.readProduct(TEST_PRODUCT_ID).getId());
-        assertEquals(TEST_CORRECT_NAME, productRestService.readProduct(TEST_PRODUCT_ID).getName());
-        assertEquals(TEST_CORRECT_DESCRIPTION, productRestService.readProduct(TEST_PRODUCT_ID).getDescription());
-        assertEquals(TEST_CORRECT_PRICE, productRestService.readProduct(TEST_PRODUCT_ID).getPrice());
-        assertEquals(TEST_AVAILABILITY_TRUE, productRestService.readProduct(TEST_PRODUCT_ID).isAvailability());
+        assertEquals(TEST_PRODUCT_ID, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getId());
+        assertEquals(TEST_CORRECT_NAME, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getName());
+        assertEquals(TEST_CORRECT_DESCRIPTION, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getDescription());
+        assertEquals(TEST_CORRECT_PRICE, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getPrice());
+        assertEquals(TEST_AVAILABILITY_TRUE, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).isAvailability());
     }
 
     @Test
@@ -96,7 +97,7 @@ class ProductControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.price").value(666.67));
-        assertEquals(BigDecimal.valueOf(666.67), productRestService.readProduct(TEST_PRODUCT_ID).getPrice());
+        assertEquals(BigDecimal.valueOf(666.67), productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getPrice());
     }
 
     @Test
@@ -113,11 +114,11 @@ class ProductControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.price").value(0.00));
-        assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), productRestService.readProduct(TEST_PRODUCT_ID).getPrice());
+        assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getPrice());
     }
 
     @Test
-    @Description("Проверяет, что при получении пустого продукта падает ошибка")
+    @Description("Проверяет, что при получении пустого продукта во время создания падает ошибка")
     public void test_givenEmptyProduct_whenAdd_thenException() throws Exception {
         Product product = new Product();
 
@@ -169,11 +170,11 @@ class ProductControllerIntegrationTest {
                 .andExpect(jsonPath("$.description").value(TEST_NEW_CORRECT_DESCRIPTION))
                 .andExpect(jsonPath("$.price").value(TEST_NEW_CORRECT_PRICE))
                 .andExpect(jsonPath("$.availability").value(TEST_AVAILABILITY_FALSE));
-        assertEquals(TEST_PRODUCT_ID, productRestService.readProduct(TEST_PRODUCT_ID).getId());
-        assertEquals(TEST_NEW_CORRECT_NAME, productRestService.readProduct(TEST_PRODUCT_ID).getName());
-        assertEquals(TEST_NEW_CORRECT_DESCRIPTION, productRestService.readProduct(TEST_PRODUCT_ID).getDescription());
-        assertEquals(TEST_NEW_CORRECT_PRICE, productRestService.readProduct(TEST_PRODUCT_ID).getPrice());
-        assertEquals(TEST_AVAILABILITY_FALSE, productRestService.readProduct(TEST_PRODUCT_ID).isAvailability());
+        assertEquals(TEST_PRODUCT_ID, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getId());
+        assertEquals(TEST_NEW_CORRECT_NAME, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getName());
+        assertEquals(TEST_NEW_CORRECT_DESCRIPTION, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getDescription());
+        assertEquals(TEST_NEW_CORRECT_PRICE, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getPrice());
+        assertEquals(TEST_AVAILABILITY_FALSE, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).isAvailability());
     }
 
     @Test
@@ -193,11 +194,11 @@ class ProductControllerIntegrationTest {
                 .andExpect(jsonPath("$.description").value(TEST_NEW_CORRECT_DESCRIPTION))
                 .andExpect(jsonPath("$.price").value(BigDecimal.valueOf(666.67)))
                 .andExpect(jsonPath("$.availability").value(TEST_AVAILABILITY_FALSE));
-        assertEquals(TEST_PRODUCT_ID, productRestService.readProduct(TEST_PRODUCT_ID).getId());
-        assertEquals(TEST_NEW_CORRECT_NAME, productRestService.readProduct(TEST_PRODUCT_ID).getName());
-        assertEquals(TEST_NEW_CORRECT_DESCRIPTION, productRestService.readProduct(TEST_PRODUCT_ID).getDescription());
-        assertEquals(BigDecimal.valueOf(666.67), productRestService.readProduct(TEST_PRODUCT_ID).getPrice());
-        assertEquals(TEST_AVAILABILITY_FALSE, productRestService.readProduct(TEST_PRODUCT_ID).isAvailability());
+        assertEquals(TEST_PRODUCT_ID, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getId());
+        assertEquals(TEST_NEW_CORRECT_NAME, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getName());
+        assertEquals(TEST_NEW_CORRECT_DESCRIPTION, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getDescription());
+        assertEquals(BigDecimal.valueOf(666.67), productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getPrice());
+        assertEquals(TEST_AVAILABILITY_FALSE, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).isAvailability());
     }
 
     @Test
@@ -217,11 +218,11 @@ class ProductControllerIntegrationTest {
                 .andExpect(jsonPath("$.description").value(TEST_NEW_CORRECT_DESCRIPTION))
                 .andExpect(jsonPath("$.price").value(0.00))
                 .andExpect(jsonPath("$.availability").value(TEST_AVAILABILITY_FALSE));
-        assertEquals(TEST_PRODUCT_ID, productRestService.readProduct(TEST_PRODUCT_ID).getId());
-        assertEquals(TEST_NEW_CORRECT_NAME, productRestService.readProduct(TEST_PRODUCT_ID).getName());
-        assertEquals(TEST_NEW_CORRECT_DESCRIPTION, productRestService.readProduct(TEST_PRODUCT_ID).getDescription());
-        assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), productRestService.readProduct(TEST_PRODUCT_ID).getPrice());
-        assertEquals(TEST_AVAILABILITY_FALSE, productRestService.readProduct(TEST_PRODUCT_ID).isAvailability());
+        assertEquals(TEST_PRODUCT_ID, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getId());
+        assertEquals(TEST_NEW_CORRECT_NAME, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getName());
+        assertEquals(TEST_NEW_CORRECT_DESCRIPTION, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getDescription());
+        assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), productRestServiceImpl.readProduct(TEST_PRODUCT_ID).getPrice());
+        assertEquals(TEST_AVAILABILITY_FALSE, productRestServiceImpl.readProduct(TEST_PRODUCT_ID).isAvailability());
     }
 
     @Test
