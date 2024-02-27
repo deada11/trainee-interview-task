@@ -39,9 +39,6 @@ public class ProductRestServiceImpl implements ProductRestService{
         this.productRepository = productRepository;
     }
 
-    CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-    CriteriaQuery<Product> criteriaQuery = criteriaBuilder.createQuery(Product.class);
-    Root<Product> root = criteriaQuery.from(Product.class);
 
     public void createProduct(Product product) {
         ProductValidator productValidator = new ProductValidator();
@@ -55,6 +52,10 @@ public class ProductRestServiceImpl implements ProductRestService{
                                          Boolean availability,
                                          String sortBy,
                                          Integer limit) {
+
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Product> criteriaQuery = criteriaBuilder.createQuery(Product.class);
+        Root<Product> root = criteriaQuery.from(Product.class);
 
         // В отдельный метод фильтрацию и сортировку.
         // На вход передавать имя, цену, наличие, сортбай.
@@ -123,6 +124,15 @@ public class ProductRestServiceImpl implements ProductRestService{
     public void deleteProduct(UUID id) {
         Product deletingProduct = productRepository.findById(id).orElseThrow(() -> new CustomEntityNotFoundException(id));
         productRepository.deleteById(id);
+    }
+
+    private void createFilterAndSorter(String name,
+                                       BigDecimal lessThanPrice,
+                                       BigDecimal greaterThanPrice,
+                                       Boolean availability,
+                                       String sortBy,
+                                       Integer limit) {
+
     }
 
     private Product updater(Product product, Product updatableProduct) {
