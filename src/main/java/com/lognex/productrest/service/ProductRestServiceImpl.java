@@ -57,11 +57,40 @@ public class ProductRestServiceImpl implements ProductRestService{
         CriteriaQuery<Product> criteriaQuery = criteriaBuilder.createQuery(Product.class);
         Root<Product> root = criteriaQuery.from(Product.class);
 
-        // В отдельный метод фильтрацию и сортировку.
-        // На вход передавать имя, цену, наличие, сортбай.
-        // Возвращает CriteriaQuery
-        // в виде criteriaQuery.where(criteria)
+        criteriaQuery = applyFiltersAndSortCriteria(criteriaBuilder, criteriaQuery, root, name, lessThanPrice, greaterThanPrice, availability, sortBy);
 
+        TypedQuery<Product> query = entityManager.createQuery(criteriaQuery);
+        if (limit != null) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+
+    public Product readProduct(UUID id) {
+        Optional<Product> product = productRepository.findById(id);
+
+        if (!product.isPresent()) {
+            throw new CustomEntityNotFoundException(id);
+        }
+        return product.get();
+    }
+
+    public void updateProduct(Product product, UUID id) {
+        Optional<Product> p = productRepository.findById(id);
+        if (!p.isPresent())
+            throw new CustomEntityNotFoundException(id);
+        Product updatebleProduct = p.get();
+        productRepository.save(updater(product, updatebleProduct));
+    }
+
+    public void deleteProduct(UUID id) {
+        Product deletingProduct = productRepository.findById(id).orElseThrow(() -> new CustomEntityNotFoundException(id));
+        productRepository.deleteById(id);
+    }
+
+    private CriteriaQuery<Product> applyFiltersAndSortCriteria(CriteriaBuilder criteriaBuilder, CriteriaQuery<Product> criteriaQuery, Root<Product> root,
+                                                               String name, BigDecimal lessThanPrice, BigDecimal greaterThanPrice, Boolean availability, String sortBy) {
         Predicate criteria = criteriaBuilder.conjunction();
         if (name != null) {
             criteria = criteriaBuilder.and(criteria,
@@ -96,43 +125,7 @@ public class ProductRestServiceImpl implements ProductRestService{
             criteriaQuery.orderBy(criteriaBuilder.asc(root.get("price")));
         }
 
-        TypedQuery<Product> query = entityManager.createQuery(criteriaQuery);
-        if (limit != null) {
-            query.setMaxResults(limit);
-        }
-        return query.getResultList();
-    }
-
-
-    public Product readProduct(UUID id) {
-        Optional<Product> product = productRepository.findById(id);
-
-        if (!product.isPresent()) {
-            throw new CustomEntityNotFoundException(id);
-        }
-        return product.get();
-    }
-
-    public void updateProduct(Product product, UUID id) {
-        Optional<Product> p = productRepository.findById(id);
-        if (!p.isPresent())
-            throw new CustomEntityNotFoundException(id);
-        Product updatebleProduct = p.get();
-        productRepository.save(updater(product, updatebleProduct));
-    }
-
-    public void deleteProduct(UUID id) {
-        Product deletingProduct = productRepository.findById(id).orElseThrow(() -> new CustomEntityNotFoundException(id));
-        productRepository.deleteById(id);
-    }
-
-    private void createFilterAndSorter(String name,
-                                       BigDecimal lessThanPrice,
-                                       BigDecimal greaterThanPrice,
-                                       Boolean availability,
-                                       String sortBy,
-                                       Integer limit) {
-
+        return criteriaQuery;
     }
 
     private Product updater(Product product, Product updatableProduct) {

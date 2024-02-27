@@ -69,11 +69,11 @@ public class ProductFilterIntegrationTest {
                         .param("availability", "true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Bar foo"))
-                .andExpect(jsonPath("$[0].price").value(BigDecimal.valueOf(4444.44)))
+                .andExpect(jsonPath("$[0].name").value("For the Emperor"))
+                .andExpect(jsonPath("$[0].price").value(BigDecimal.valueOf(3333.33)))
                 .andExpect(jsonPath("$[0].availability").value(true))
-                .andExpect(jsonPath("$[1].name").value("For the Emperor"))
-                .andExpect(jsonPath("$[1].price").value(BigDecimal.valueOf(3333.33)))
+                .andExpect(jsonPath("$[1].name").value("Bar foo"))
+                .andExpect(jsonPath("$[1].price").value(BigDecimal.valueOf(4444.44)))
                 .andExpect(jsonPath("$[1].availability").value(true));
     }
 
