@@ -89,12 +89,18 @@ public class ProductRestServiceImpl implements ProductRestService{
         productRepository.deleteById(id);
     }
 
-    private CriteriaQuery<Product> applyFiltersAndSortCriteria(CriteriaBuilder criteriaBuilder, CriteriaQuery<Product> criteriaQuery, Root<Product> root,
-                                                               String name, BigDecimal lessThanPrice, BigDecimal greaterThanPrice, Boolean availability, String sortBy) {
+    private CriteriaQuery<Product> applyFiltersAndSortCriteria(CriteriaBuilder criteriaBuilder,
+                                                               CriteriaQuery<Product> criteriaQuery,
+                                                               Root<Product> root,
+                                                               String name,
+                                                               BigDecimal lessThanPrice,
+                                                               BigDecimal greaterThanPrice,
+                                                               Boolean availability,
+                                                               String sortBy) {
         Predicate criteria = criteriaBuilder.conjunction();
         if (name != null) {
             criteria = criteriaBuilder.and(criteria,
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name + "%".toLowerCase()));
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%"+name.toLowerCase()+"%"));
         }
 
         if (greaterThanPrice != null) {
@@ -115,10 +121,15 @@ public class ProductRestServiceImpl implements ProductRestService{
         criteriaQuery.where(criteria);
 
         if (sortBy != null) {
-            if (sortBy.equalsIgnoreCase("name")) {
+            if (sortBy.equalsIgnoreCase("nameAsc")) {
                 criteriaQuery.orderBy(criteriaBuilder.asc(root.get("name")));
-            }
-            if (sortBy.equalsIgnoreCase("price")) {
+            } else if (sortBy.equalsIgnoreCase("nameDesc")) {
+                criteriaQuery.orderBy(criteriaBuilder.desc(root.get("name")));
+            } else if (sortBy.equalsIgnoreCase("priceAsc")) {
+                criteriaQuery.orderBy(criteriaBuilder.asc(root.get("price")));
+            } else if (sortBy.equalsIgnoreCase("priceDesc")) {
+                criteriaQuery.orderBy(criteriaBuilder.desc(root.get("price")));
+            } else {
                 criteriaQuery.orderBy(criteriaBuilder.asc(root.get("price")));
             }
         } else {
